@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 
@@ -45,7 +46,8 @@ namespace albiondata_sql_dotNet
     private static ulong updatedGoldCounter;
 
     private static readonly Timer expirationTimer = new Timer(ExpirationTask, null, Timeout.Infinite, Timeout.Infinite);
-
+    private static readonly Dictionary<int, string> itemIdMapping = new Dictionary<int, string>();
+    
     #region Connections
     private static readonly Lazy<IConnection> lazyNats = new Lazy<IConnection>(() =>
     {
@@ -62,9 +64,9 @@ namespace albiondata_sql_dotNet
     }
     #endregion
     #region Subjects
-    private const string marketOrdersDedupedBulk = "marketorders.deduped.bulk";
-    private const string marketHistoriesDeduped = "markethistories.deduped";
-    private const string goldDataDeduped = "goldprices.deduped";
+    private const string marketOrdersDedupedBulk = "marketorders.ingest";
+    private const string marketHistoriesDeduped = "markethistories.ingest";
+    private const string goldDataDeduped = "goldprices.ingest";
     #endregion
 
     private void OnExecute()
@@ -79,6 +81,16 @@ namespace albiondata_sql_dotNet
       if (Debug)
       {
         logger.LogInformation("Debugging enabled");
+      }
+
+      var itemIdFile = new HttpClient().GetStringAsync("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/formatted/items.txt").Result;
+      foreach (var line in itemIdFile.Split("\n", StringSplitOptions.RemoveEmptyEntries))
+      {
+        var split = line.Split(':').Select(x => x.Trim());
+        if (split.Any())
+        {
+          itemIdMapping.Add(int.Parse(split.First()), split.Skip(1).First());
+        }
       }
 
       using (var context = new ConfiguredContext())
@@ -192,6 +204,9 @@ namespace albiondata_sql_dotNet
           aggregationType = TimeAggregation.Hourly;
         }
 
+        // Lookup the unique name based on the numeric ID
+        itemIdMapping.TryGetValue((int)upload.AlbionId, out upload.AlbionIdString);
+        
         // Do not use the last history timestamp because it is a partial period
         // It is not guaranteed to be updated so it can appear that the count in the period was way lower
         var marketHistoryUpdates = upload.MarketHistories.OrderBy(x => x.Timestamp).SkipLast(1);
