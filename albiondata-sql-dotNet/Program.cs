@@ -41,7 +41,7 @@ namespace albiondata_sql_dotNet
 
     private static readonly ManualResetEvent quitEvent = new ManualResetEvent(false);
 
-    private static ulong updatedOrderCounter;
+    // private static ulong updatedOrderCounter;
     private static ulong updatedHistoryCounter;
     private static ulong updatedGoldCounter;
 
@@ -64,7 +64,7 @@ namespace albiondata_sql_dotNet
     }
     #endregion
     #region Subjects
-    private const string marketOrdersDedupedBulk = "marketorders.ingest";
+    // private const string marketOrdersDedupedBulk = "marketorders.ingest";
     private const string marketHistoriesDeduped = "markethistories.ingest";
     private const string goldDataDeduped = "goldprices.ingest";
     #endregion
@@ -109,16 +109,16 @@ namespace albiondata_sql_dotNet
       logger.LogInformation($"Nats URL: {NatsUrl}");
       logger.LogInformation($"NATS Connected, ID: {NatsConnection.ConnectedId}");
 
-      var incomingMarketOrders = NatsConnection.SubscribeAsync(marketOrdersDedupedBulk);
+      // var incomingMarketOrders = NatsConnection.SubscribeAsync(marketOrdersDedupedBulk);
       var incomingMarketHistories = NatsConnection.SubscribeAsync(marketHistoriesDeduped);
       var incomingGoldData = NatsConnection.SubscribeAsync(goldDataDeduped);
 
-      incomingMarketOrders.MessageHandler += HandleMarketOrderBulk;
+      // incomingMarketOrders.MessageHandler += HandleMarketOrderBulk;
       incomingMarketHistories.MessageHandler += HandleMarketHistory;
       incomingGoldData.MessageHandler += HandleGoldData;
 
-      incomingMarketOrders.Start();
-      logger.LogInformation("Listening for Market Order Data");
+      // incomingMarketOrders.Start();
+      // logger.LogInformation("Listening for Market Order Data");
       incomingMarketHistories.Start();
       logger.LogInformation("Listening for Market History Data");
       incomingGoldData.Start();
