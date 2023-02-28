@@ -206,7 +206,35 @@ namespace albiondata_sql_dotNet
 
         // Lookup the unique name based on the numeric ID
         itemIdMapping.TryGetValue((int)upload.AlbionId, out upload.AlbionIdString);
-        
+
+        // Make sure all caerleon markets are registered with the same ID since they have the same contents
+          if (upload.LocationId == (ushort)Location.Caerleon2)
+          {
+            // TODO Verify this is still valid, if so, merge with switch block below
+            upload.LocationId = (ushort)Location.Caerleon;
+          }
+          // Into the Fray Portal Towns
+          // Make sure all portal markets are registered with the same ID as their corresponding city as they have the same contents
+	        switch(upload.LocationId)
+          {
+          case (ushort)Location.ThetfordPortal:
+               upload.LocationId = (ushort)Location.Thetford;
+               break;
+          case (ushort)Location.LymhurstPortal:
+               upload.LocationId = (ushort)Location.Lymhurst;
+               break;
+          case (ushort)Location.BridgewatchPortal:
+               upload.LocationId = (ushort)Location.Bridgewatch;
+               break;
+          case (ushort)Location.MartlockPortal:
+               upload.LocationId = (ushort)Location.Martlock;
+               break;
+          case (ushort)Location.FortSterlingPortal:
+               upload.LocationId = (ushort)Location.FortSterling;
+               break;
+          // case TODO list valid locations, prevent database import if location does not have a known market place
+          }
+
         // Do not use the last history timestamp because it is a partial period
         // It is not guaranteed to be updated so it can appear that the count in the period was way lower
         var marketHistoryUpdates = upload.MarketHistories.OrderBy(x => x.Timestamp).SkipLast(1);
